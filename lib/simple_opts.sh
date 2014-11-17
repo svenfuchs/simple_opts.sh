@@ -7,40 +7,39 @@ puts() {
 }
 
 __opt_parse() {
-  local opts=$1
-  local args=" $ARGS "
-  local flag negated name value
+  local _opts=$1
+  local _args=" $ARGS "
+  local _flag _negated _name _value
 
-  for opt in $opts; do
-    name=$(__opt_name $opt "$opts")
-    flag=$(__opt_is_flag $name "$opts")
-    name=$(echo $name | tr - _)
-    [[ $opt =~ ^--no- ]] && negated=true || negated=false
+  for opt in $_opts; do
+    _name=$(__opt_name $opt "$_opts")
+    _flag=$(__opt_is_flag $_name "$_opts")
+    _name=$(echo $_name | tr - _)
+    [[ $opt =~ ^--no- ]] && _negated=true || _negated=false
     opt=${opt%=}
     opt=${opt%:*}
-    # puts name: $name, flag: $flag, negated: $negated, opt: $opt, args: \"$args\"
+    # puts _name: $_name, _flag: $_flag, _negated: $_negated, opt: $opt, _args: \"$_args\"
 
-    count=$(grep -o $(echo $opt | sed 's/-/\\-/g') <<< $args | wc -l)
+    count=$(grep -o $(echo $opt | sed 's/-/\\-/g') <<< $_args | wc -l)
     if (( count > 1 )); then
-      local type_$name=array
+      local _type_$_name=array
     fi
 
-    while [[ " $args " =~ " $opt" || $negated = true ]]; do
-      if [ -n "$flag" ]; then
-        [[ " $args " =~ " $opt" ]] && value=true || value=false
-        [[ $negated = true ]] && value=$(__opt_negate $value)
+    while [[ " $_args " =~ " $opt" || $_negated = true ]]; do
+      if [ -n "$_flag" ]; then
+        [[ " $_args " =~ " $opt" ]] && _value=true || _value=false
+        [[ $_negated = true ]] && _value=$(__opt_negate $_value)
       else
-        value=$([[ " $args " =~ $opt( |=)([^ ]+) ]] && echo ${BASH_REMATCH[2]} || echo '')
+        _value=$([[ " $_args " =~ $opt( |=)([^ ]+) ]] && echo ${BASH_REMATCH[2]} || echo '')
       fi
 
-      eval " __opt_set $name \"$value\" \$type_$name"
-      args=$(__opt_strip $name "$value" $opt $args)
+      eval " __opt_set $_name \"$_value\" \$_type_$_name"
+      _args=$(__opt_strip $_name "$_value" $opt $_args)
 
-      [[ $negated = false ]] || break
+      [[ $_negated = false ]] || break
     done
   done
-
-  ARGS=$args
+  ARGS=$_args
 }
 
 __opt_negate() {
@@ -48,21 +47,21 @@ __opt_negate() {
 }
 
 __opt_set() {
-  local name=$1
-  local value=$2
-  local type=$3
+  local _name=$1
+  local _value=$2
+  local _type=$3
 
-  if [[ $name =~ ^no_ ]]; then
-    name=${name#no_}
+  if [[ $_name =~ ^no_ ]]; then
+    _name=${_name#no_}
   fi
 
-  # puts name: $name, value: $value
+  # puts _name: $_name, _value: $_value, _type: $_type
 
-  if [ "$type" = 'array' ]; then
-    name=${name}s
-    eval "$name=\$( echo \"\$$name $value\" | sed 's/^ //' )"
+  if [ "$_type" = 'array' ]; then
+    _name=${_name}s
+    eval "$_name=\$( echo \"\$$_name $_value\" | sed 's/^ //' )"
   else
-    eval "$name=\"$value\""
+    eval "$_name=\"$_value\""
   fi
 }
 
@@ -76,7 +75,7 @@ __opt_strip() {
   if [[ $value = true || $value = false ]]; then
     echo $args | sed s/$opt// | sed 's/(^ *| *$)//g'
   else
-    echo $args | sed "s/$opt.*$(echo $value | sed s-/-\\\\/-g)//g" | sed 's/(^ *| *$)//g'
+    echo $args | sed "s/$opt[ =]*$(echo $value | sed s-/-\\\\/-g)//" | sed 's/(^ *| *$)//g'
   fi
 }
 

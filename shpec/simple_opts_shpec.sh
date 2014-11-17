@@ -213,6 +213,13 @@ describe 'simple_opts'
       opt_parse foo --verbose bar --file path/to/file.sh baz
       assert equal "${ARGS[0]}" foo
       assert equal "${ARGS[1]}" bar
+
+    it 'with an option with the same value given'
+      name=
+      opt --name=
+      opt_parse --name main main
+      assert equal "$name" main
+      assert equal "${ARGS[0]}" main
   end
 
   describe 'quote'
