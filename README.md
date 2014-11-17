@@ -55,3 +55,10 @@ opt_parse --tag foo --tag bar
 echo "tags: $tags"
 # tags: foo bar
 ```
+
+Of course, in reality `opt_parse` would be called with `$@`:
+
+```shell
+opt --path= -p --verbose -v
+opt_parse $@
+```
